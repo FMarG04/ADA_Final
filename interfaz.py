@@ -68,7 +68,12 @@ def visualizar_comunidades():
     min_lon = min(muestra[n]['ubicacion'][1] for n in muestra if muestra[n]['ubicacion'])
     max_lon = max(muestra[n]['ubicacion'][1] for n in muestra if muestra[n]['ubicacion'])
 
-    for i, (comunidad, nodos) in enumerate(comunidades.items()):
+    comunidades_items = list(comunidades.items())
+    comunidad_id_map = {orig_id: idx for idx, (orig_id, _) in enumerate(comunidades_items)}
+
+    for orig_id, nodos in comunidades_items:
+        idx = comunidad_id_map[orig_id]
+
         x, y = [], []
         for nodo in nodos:
             if nodo in muestra and muestra[nodo]['ubicacion']:
@@ -82,10 +87,10 @@ def visualizar_comunidades():
             mode='markers',
             marker=dict(
                 size=6,
-                color=colores[i % len(colores)],
+                color=colores[idx % len(colores)],
                 opacity=0.85
             ),
-            name=f"Comunidad {comunidad}"
+            name=f"Comunidad {idx + 1}"  # Etiqueta legible
         ))
 
     image_path = "world_map.png"
@@ -109,7 +114,7 @@ def visualizar_comunidades():
         )
 
     fig.update_layout(
-        title="Visualizacion de Comunidades",
+        title="Visualización de Comunidades",
         xaxis_title="Latitud",
         yaxis_title="Longitud",
         plot_bgcolor='rgba(0,0,0,0)',
@@ -118,6 +123,7 @@ def visualizar_comunidades():
     )
 
     fig.show()
+ 
 
 boton_comunidades = ctk.CTkButton(app, text="Ver Comunidades", command=lambda: threading.Thread(target=visualizar_comunidades).start())
 boton_comunidades.pack(pady=10)
