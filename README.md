@@ -1,7 +1,3 @@
-Aquí tienes el `README.md` actualizado **sin emojis** y con uso de **negritas solo en títulos y subtítulos**, como solicitaste:
-
----
-
 # ADA\_Final
 
 ---
