@@ -1,4 +1,4 @@
-﻿import time
+import time
 import gc
 import sys
 import math
@@ -122,118 +122,47 @@ def expansion(muestra):
     print(', '.join(map(str, mst_orden)))
     print(f"Peso total del arbol de expansion minima: {peso_total:.4f}")
  
+def louvain(muestra):
+    print("\n--- Detectando comunidades (simplificado) ---")
 
-def grafo(m):
-    n = list(m.keys())
-    g = {u: {} for u in n}
-    t = 0.0
-    for u in n:
-        lu = m[u]['ubicacion']
-        for v in m[u]['conexiones']:
-            if v in m and u < v:
-                lv = m[v]['ubicacion']
-                d = distancia(lu, lv)
-                p = 1000.0 if d == 0 else 1.0 / d
-                g[u][v] = p
-                g[v][u] = p
-                t += p
-    return g, t * 2
+    # Construir grafo válido
+    grafo = {
+        u: set(v for v in data['conexiones'] if v in muestra and muestra[v]['ubicacion'] is not None and None not in muestra[v]['ubicacion'])
+        for u, data in muestra.items()
+        if data['ubicacion'] is not None and None not in data['ubicacion']
+    }
 
-def grados(g):
-    return {n: sum(v.values()) for n, v in g.items()}
+    etiquetas = {nodo: nodo for nodo in grafo}
+    cambiaron = True
 
-def ganancia(g, n, c, info, t):
-    if t == 0:
-        return 0.0
-    s = 0.0
-    for v, p in g[n].items():
-        if any(v in i['nodos'] and k == c for k, i in info.items()):
-            s += p
-    d = sum(g[n].values())
-    st = info.get(c, {}).get('grado', 0.0)
-    return (s - (d * st) / t) / (t / 2)
+    while cambiaron:
+        cambiaron = False
+        nodos = list(grafo.keys())
+        random.shuffle(nodos)
+        for nodo in nodos:
+            conteo = {}
+            for vecino in grafo[nodo]:
+                etiqueta = etiquetas[vecino]
+                conteo[etiqueta] = conteo.get(etiqueta, 0) + 1
+            if conteo:
+                nueva = max(conteo.items(), key=lambda x: (x[1], -x[0]))[0]
+                if etiquetas[nodo] != nueva:
+                    etiquetas[nodo] = nueva
+                    cambiaron = True
 
-def estructura(n, com, deg):
-    e = {}
-    for u in n:
-        c = com[u]
-        if c not in e:
-            e[c] = {'nodos': set(), 'grado': 0.0}
-        e[c]['nodos'].add(u)
-        e[c]['grado'] += deg.get(u, 0.0)
-    return e
+    # Agrupar por etiqueta
+    comunidades = {}
+    for nodo, etiqueta in etiquetas.items():
+        comunidades.setdefault(etiqueta, []).append(nodo)
 
-def louvain(m):
-    print("\n--- Iniciando el Algoritmo de Louvain ---")
-    f = {}
-    for u, d in m.items():
-        if d['ubicacion'] is not None and None not in d['ubicacion']:
-            c = [v for v in d['conexiones'] if v in m and m[v]['ubicacion'] is not None and None not in m[v]['ubicacion']]
-            f[u] = {'ubicacion': d['ubicacion'], 'conexiones': c}
-    if not f:
-        print("No hay nodos válidos.")
-        return {}
-    g, t = grafo(f)
-    deg = grados(g)
-    com = {n: i for i, n in enumerate(g)}
-    nodos = list(g.keys())
-    ite = 0
-    while True:
-        print(f"\n--- Iteración Louvain #{ite + 1} ---")
-        mej = False
-        a = nodos[:]
-        random.shuffle(a)
-        for n in a:
-            c = com[n]
-            inf = estructura(nodos, com, deg)
-            if c in inf:
-                inf[c]['nodos'].discard(n)
-                inf[c]['grado'] -= deg[n]
-                if not inf[c]['nodos']:
-                    del inf[c]
-            mejor = -float('inf')
-            nuevo = c
-            cs = set(com.get(v) for v in g[n])
-            for cc in cs:
-                g_mod = ganancia(g, n, cc, inf, t)
-                if g_mod > mejor:
-                    mejor = g_mod
-                    nuevo = cc
-            if nuevo != c:
-                com[n] = nuevo
-                mej = True
-        if not mej:
-            break
-        mapa = {}
-        for n, c in com.items():
-            mapa.setdefault(c, []).append(n)
-        nuevo_g = {}
-        nuevo_m = {}
-        for i, (c, m) in enumerate(mapa.items()):
-            nuevo_m[c] = i
-            nuevo_g[i] = {}
-        for cu, mu in mapa.items():
-            for u in mu:
-                for v, p in g[u].items():
-                    cv = com[v]
-                    if cu == cv:
-                        nuevo_g[nuevo_m[cu]][nuevo_m[cu]] = nuevo_g[nuevo_m[cu]].get(nuevo_m[cu], 0.0) + p
-                    else:
-                        a = nuevo_m[cu]
-                        b = nuevo_m[cv]
-                        nuevo_g[a][b] = nuevo_g[a].get(b, 0.0) + p
-        g = nuevo_g
-        com = {n: n for n in g}
-        nodos = list(g.keys())
-        t = sum(sum(v.values()) for v in g.values())
-        ite += 1
-    res = {}
-    for n, c in com.items():
-        res.setdefault(c, []).append(n)
-    print("\n--- Comunidades detectadas ---")
-    for c, m in res.items():
-        print(f"Comunidad {c}: {sorted(m)}")
-    return res
+    # Imprimir resultados
+    for i, (cid, miembros) in enumerate(sorted(comunidades.items()), 1):
+        print(f"\nComunidad {i}:")
+        print(f"Cantidad de usuarios: {len(miembros)}")
+        print("Usuarios:", ', '.join(map(str, sorted(miembros))))
+
+    return comunidades
+
 
 def cargar(ruta_grafo, ruta_ubic, max_usuarios=None, tam_bloque=10000, tam_muestra=0):
     total = 0
@@ -345,7 +274,7 @@ def cargar(ruta_grafo, ruta_ubic, max_usuarios=None, tam_bloque=10000, tam_muest
 
 
 def main():
-    muestra = cargar('10_million_user.txt', '10_million_location.txt', 10000, 1000 , 1000)
+    muestra = cargar('10_million_user.txt', '10_million_location.txt', 10000, 10000 , 500 )
 
     print("\n--- Analisis en la muestra ---") 
     print("\nCalculando longitud promedio del camino mas corto...")
