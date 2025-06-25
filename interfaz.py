@@ -50,6 +50,8 @@ def ejecutar():
 boton_ejecutar = ctk.CTkButton(app, text="Ejecutar Analisis", command=lambda: threading.Thread(target=ejecutar).start())
 boton_ejecutar.pack(pady=10)
 
+import plotly.graph_objects as go
+
 def visualizar_comunidades():
     muestra = muestra_global
     comunidades = comunidades_global
@@ -63,66 +65,53 @@ def visualizar_comunidades():
         "#aaffc3", "#808000", "#ffd8b1", "#000075", "#808080"
     ]
 
-    min_lat = min(muestra[n]['ubicacion'][0] for n in muestra if muestra[n]['ubicacion'])
-    max_lat = max(muestra[n]['ubicacion'][0] for n in muestra if muestra[n]['ubicacion'])
-    min_lon = min(muestra[n]['ubicacion'][1] for n in muestra if muestra[n]['ubicacion'])
-    max_lon = max(muestra[n]['ubicacion'][1] for n in muestra if muestra[n]['ubicacion'])
-
     comunidades_items = list(comunidades.items())
     comunidad_id_map = {orig_id: idx for idx, (orig_id, _) in enumerate(comunidades_items)}
 
     for orig_id, nodos in comunidades_items:
         idx = comunidad_id_map[orig_id]
+        lats, lons = [], []
 
-        x, y = [], []
         for nodo in nodos:
             if nodo in muestra and muestra[nodo]['ubicacion']:
                 lat, lon = muestra[nodo]['ubicacion']
-                x.append(lat)
-                y.append(lon)
+                if -90 <= lat <= 90 and -180 <= lon <= 180:
+                    lats.append(lat)
+                    lons.append(lon)
 
-        fig.add_trace(go.Scatter(
-            x=x,
-            y=y,
+        fig.add_trace(go.Scattergeo(
+            lat=lats,
+            lon=lons,
             mode='markers',
             marker=dict(
-                size=6,
+                size=4,
                 color=colores[idx % len(colores)],
                 opacity=0.85
             ),
-            name=f"Comunidad {idx + 1}"  # Etiqueta legible
+            name=f"Comunidad {idx + 1}"
         ))
 
-    image_path = "world_map.png"
-    if os.path.exists(image_path):
-        with open(image_path, "rb") as image_file:
-            encoded = base64.b64encode(image_file.read()).decode()
-
-        fig.update_layout(
-            images=[dict(
-                source="data:image/png;base64," + encoded,
-                xref="x",
-                yref="y",
-                x=min_lat,
-                y=max_lon,
-                sizex=max_lat - min_lat,
-                sizey=max_lon - min_lon,
-                sizing="stretch",
-                opacity=0.5,
-                layer="below"
-            )]
-        )
-
     fig.update_layout(
-        title="Visualizacion de Comunidades",
-        xaxis_title="Latitud",
-        yaxis_title="Longitud",
-        plot_bgcolor='rgba(0,0,0,0)',
+        title='Visualizacion de Comunidades',
+        geo=dict(
+            projection_type='natural earth',  
+            showland=True,
+            landcolor='rgb(40, 40, 40)',
+            showocean=True,
+            oceancolor='rgb(10, 80, 150)',
+            showlakes=True,
+            lakecolor='rgb(80, 150, 240)',
+            coastlinecolor='white',
+            lataxis=dict(range=[-90, 90]),
+            lonaxis=dict(range=[-180, 180])
+        ),
         paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='black')
     )
 
     fig.show()
+
  
 
 boton_comunidades = ctk.CTkButton(app, text="Ver Comunidades", command=lambda: threading.Thread(target=visualizar_comunidades).start())
