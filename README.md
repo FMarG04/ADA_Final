@@ -1,87 +1,111 @@
-# ADA_Final
+Aquí tienes el `README.md` actualizado **sin emojis** y con uso de **negritas solo en títulos y subtítulos**, como solicitaste:
 
 ---
 
+# ADA\_Final
 
-Este proyecto realiza análisis sobre grafos grandes (con ubicaciones geográficas), incluyendo cálculo de caminos más cortos, árboles de expansión mínima y detección de comunidades con el algoritmo de Louvain.
+---
 
+Este proyecto realiza análisis sobre grafos de gran escala (con ubicaciones geográficas), incluyendo el cálculo del camino promedio más corto, el árbol de expansión mínima (MST) y la detección de comunidades mediante un enfoque simplificado del algoritmo de Louvain.
 
-
-##  Características
-
-* Carga eficiente desde archivos grandes de usuarios y ubicaciones.
-* Cálculo de:
-
-  * Camino promedio más corto.
-  * Árbol de expansión mínima (MST).
-  * Detección de comunidades con el Algoritmo de Louvain.
-* Visualización interactiva de comunidades usando Plotly.
-* Interfaz moderna y ligera con CustomTkinter.
-* Limpieza automática de memoria tras ejecución.
+Además, incluye una interfaz gráfica moderna para facilitar la ejecución e inspección visual de resultados.
 
 
 
-##  Estructura esperada de archivos de entrada
+## Características
 
-* `10_million_user.txt`: Cada línea representa las conexiones de un usuario (IDs separados por comas).
-* `10_million_location.txt`: Cada línea contiene la ubicación (latitud, longitud) correspondiente al usuario en la misma línea del archivo de conexiones.
+* Carga eficiente de archivos masivos usando bloques y manejo de errores.
+* Análisis de redes:
 
->  Ambos archivos deben estar alineados línea por línea y en la misma carpeta que el programa.
+  * Longitud promedio del camino más corto (con Dijkstra).
+  * Árbol de expansión mínima (MST con Prim).
+  * Detección de comunidades (Louvain simplificado).
+* Visualización interactiva de comunidades sobre mapa mundial (Plotly).
+* Interfaz gráfica con consola embebida usando `customtkinter`.
+* Limpieza automática de memoria tras la ejecución.
 
 
-##  Cómo ejecutar
 
-### 1. Requisitos
+## Estructura esperada de archivos de entrada
 
-Asegúrate de tener instaladas las siguientes dependencias:
+* `10_million_user.txt`: Cada línea contiene las conexiones (IDs) de un usuario, separadas por comas.
+* `10_million_location.txt`: Cada línea contiene la ubicación (latitud, longitud) del usuario correspondiente en la misma línea del archivo de usuarios.
+
+Ambos archivos deben estar alineados línea por línea y ubicados en la misma carpeta que el programa.
+
+
+
+## Requisitos
+
+Instala las siguientes dependencias antes de ejecutar el programa:
 
 ```bash
 pip install customtkinter plotly
 ```
 
-### 2. Ejecución
 
-Corre el archivo de la interfaz gráfica:
+
+## Ejecución
+
+Ejecuta la interfaz gráfica con:
 
 ```bash
 python interfaz.py
 ```
 
-(Usualmente algo como `main_gui.py`)
+Aparecerá una ventana con los siguientes controles:
 
-La ventana mostrará:
+* Botón "Ejecutar Análisis": Inicia el análisis completo sobre una muestra.
+* Botón "Ver Comunidades": Visualiza las comunidades detectadas sobre un mapa interactivo.
+* Botón "Salir": Libera recursos y cierra la aplicación.
 
-* **Botón "Ejecutar Análisis"**: Carga los archivos, toma una muestra y ejecuta los análisis.
-* **Botón "Ver Comunidades"**: Muestra un mapa con las comunidades detectadas.
-* **Botón "Salir"**: Limpia recursos y cierra la aplicación.
+Toda la salida del análisis se muestra en vivo dentro de la interfaz.
 
 
-##  Flujo del Programa
 
-1. **Carga (`cargar`)**:
+## Flujo del Programa
 
-   * Lee usuarios y ubicaciones por bloques.
-   * Toma una muestra de tamaño definido (ej. 1000 usuarios).
-   * Maneja errores y valores nulos.
+### 1. Carga (`cargar` en `ADA_Proyecto.py`)
 
-2. **Análisis**:
+* Lee ambos archivos por bloques (configurable con `tam_bloque`).
+* Extrae ubicaciones válidas y relaciones entre usuarios.
+* Selecciona una muestra (`tam_muestra`) para análisis.
+* Maneja errores por línea, ubicaciones faltantes o malformadas.
 
-   * `promedio`: Usa Dijkstra para calcular la longitud promedio de los caminos más cortos.
-   * `expansion`: Aplica Prim para calcular el árbol de expansión mínima (MST).
-   * `louvain`: Detecta comunidades en la muestra usando el algoritmo de Louvain.
+### 2. Análisis (también en `ADA_Proyecto.py`)
 
-3. **Visualización**:
+* `promedio`: Calcula la longitud promedio de caminos más cortos con Dijkstra.
+* `expansion`: Calcula un Árbol de Expansión Mínima (MST) con Prim.
+* `louvain`: Agrupa nodos en comunidades basándose en las conexiones.
 
-   * Los resultados se muestran en consola embebida.
-   * Las comunidades se grafican sobre un mapa, si se incluye `world_map.png`.
+### 3. Visualización (`interfaz.py`)
 
-4. **Limpieza (`liberar`)**:
+* Consola integrada muestra los resultados de forma textual.
+* El botón “Ver Comunidades” lanza un mapa Plotly con colores por comunidad.
 
-   * Borra variables innecesarias, fuerza el recolector de basura y termina el programa.
+### 4. Limpieza (`liberar`)
+
+* Borra variables que no sean críticas.
+* Ejecuta el recolector de basura (`gc.collect()`).
+* Termina el programa con `sys.exit()`.
+
 
 
 ## Visualización de Comunidades
 
-* Cada comunidad se muestra con un color diferente en el mapa.
-* Si se encuentra `world_map.png`, se utiliza como fondo.
+* Cada comunidad detectada se representa en un color distinto.
+* Se usa un gráfico tipo `Scattergeo` con `plotly.graph_objects`.
+* Se valida que las coordenadas sean válidas para evitar errores de visualización.
+* No se requiere imagen de fondo (`world_map.png`), ya que Plotly genera el mapa de forma automática.
+
+
+
+## Archivos incluidos
+
+| Archivo                   | Descripción                                                           |
+| ------------------------- | --------------------------------------------------------------------- |
+| `ADA_Proyecto.py`         | Código de análisis principal: carga, procesamiento y lógica de grafo. |
+| `interfaz.py`             | Interfaz gráfica para ejecutar y visualizar el análisis.              |
+| `10_million_user.txt`     | (No incluido) Archivo de conexiones entre usuarios.                   |
+| `10_million_location.txt` | (No incluido) Archivo de ubicaciones de cada usuario.                 |
 
