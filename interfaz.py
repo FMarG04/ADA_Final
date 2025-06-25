@@ -114,7 +114,7 @@ def visualizar_comunidades():
         )
 
     fig.update_layout(
-        title="Visualización de Comunidades",
+        title="Visualizacion de Comunidades",
         xaxis_title="Latitud",
         yaxis_title="Longitud",
         plot_bgcolor='rgba(0,0,0,0)',
